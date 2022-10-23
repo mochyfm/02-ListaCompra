@@ -1,11 +1,8 @@
 import { useState } from 'react';
-import uuid from 'react-native-uuid';
 import { Pressable, StyleSheet, Text, TextInput, View, Image, Alert, ToastAndroid } from 'react-native';
 import SelectDropdown from 'react-native-select-dropdown';
 
-const ShoppingList = ({onProductAdd}) => {
-
-    const [product, setProduct] = useState({})
+const ShoppingList = ({onProductAdd, productInfo, setProductInfo, defaultProduct}) => {
 
     const exampleList = [
       'Lettuce',
@@ -24,67 +21,66 @@ const ShoppingList = ({onProductAdd}) => {
     ]
 
     const typesOfFood = [
-      'Carne',
-      'Verdura',
-      'Pescado',
-      'Dulces',
-      'Otro'
+      'Meat',
+      'Vegetable',
+      'Fish',
+      'Bakery',
+      'Fruit'
     ]
 
     const randomProduct = () => {
       let randomValue = Math.floor(Math.random() * exampleList.length);
-      return exampleList[randomValue]
+        return exampleList[randomValue]
     }
 
     const productNameHandler = (value) => {
-        setProduct({...product, productName: value})
+      setProductInfo({...productInfo, productName: value})
     }
 
     const productQuantityHandler = (value) => {
-      setProduct({...product, quantity: parseInt(value)})
+      setProductInfo({...productInfo, quantity: parseInt(value)})
     }
 
     const productTypeHandler = (value) => {
-      setProduct({...product, type: value})
+      setProductInfo({...productInfo, type: value})
     }
 
+    const checkForm = (product) => {
+      return (product.productName).trim() !== '' && product.type !== '' && (product.quantity >= 1 && product.quantity <= 50)
+    } 
+
     const productAddHandler = () => {
-      setProduct({
-        id: uuid.v4(),
-        ...product,
-        bought: false,
-      })
-      onProductAdd(product)
+      if (productInfo.quantity >= 1 && productInfo.quantity <= 50 ) {
+        if ((productInfo.productName).trim() === '') {
+          console.log('ERROR: No hay nombre de producto');
+        } else {
+          if (productInfo.type.trim() === ''){
+            console.log('ERROR: No hay tipo seleccionado')
+          }
+          else { 
+            onProductAdd(productInfo);
+            setProductInfo(defaultProduct);
+          }
+        }
+      }  
     }
 
     return (
         <View style={styles.mainBackground}>
-          <View style={styles.containerSection}>
-            <View>
-              <Text style={styles.textProperties}>Product Name</Text>
+          <View style={styles.topSection}>
+            <View style={styles.productNameBox}>
+              <Text style={styles.productNameText}>Product Name</Text>
               <TextInput
-                  maxLength={25}
+                  maxLength={18}
                   onChangeText={productNameHandler}
                   placeholder={randomProduct()}
                   placeholderTextColor={'#AAAFB5'}
-                  style={styles.valueInput}
-                  value={product.productName}
-              />
-            </View>
-            <View style={styles.quantitySection}>
-              <Text style={styles.quantityText}>Quantity: </Text>
-              <TextInput   
-                  onChangeText={productQuantityHandler}
-                  keyboardType='numeric'
-                  maxLength={2}
-                  placeholder='0'
-                  placeholderTextColor={'#AAAFB5'}
-                  style={styles.quantityInput}
-                  value={product.quantity}
+                  style={styles.productNameInput}
+                  value={productInfo.productName}
               />
             </View>
           </View>
-          <View style={styles.containerSection}>
+          <View style={styles.botSection}>
             <View>
               {/* https://www.npmjs.com/package/react-native-select-dropdown */}
               <SelectDropdown
@@ -100,11 +96,30 @@ const ShoppingList = ({onProductAdd}) => {
                 }}
               />
             </View>
-            <Pressable style={styles.addButtonProperties} onPress={productAddHandler}>
-              <Text style={styles.addbuttonTxtProperties}>Añadir</Text>
-              <Text style={styles.addbuttonTxtProperties}>+</Text>
-            </Pressable>
+            <View style={styles.quantityBox}>
+              <Text style={styles.quantityText}>Quantity: </Text>
+              <TextInput   
+                  onChangeText={productQuantityHandler}
+                  keyboardType='numeric'
+                  maxLength={2}
+                  placeholder='0'
+                  placeholderTextColor={'#AAAFB5'}
+                  style={styles.quantityInput}
+                  value={productInfo.quantity}
+              />
+            </View>
           </View>
+          <Pressable style={checkForm(productInfo)
+              ? styles.addButton
+              : styles.addButtonDisabled} 
+              onPress={productAddHandler}>
+              <Text style={ checkForm(productInfo) 
+              ? styles.addButtonText
+              : styles.addButtonDisabledText }>Añadir</Text>
+              <Text style={ checkForm(productInfo) 
+              ? styles.addButtonText
+              : styles.addButtonDisabledText }>+</Text>
+          </Pressable>
         </View> 
     )
 
@@ -116,103 +131,114 @@ const ShoppingList = ({onProductAdd}) => {
 
   const styles = StyleSheet.create({
     mainBackground: {
-      backgroundColor: 'transparent',
       borderColor: '#FF6F00',
-      borderRadius: 20,
-      borderWidth: 1,
-      padding: 20,
-      paddingTop: 40,
-      paddingBottom: 0,
-      height: '80%'
+      borderBottomWidth: 1,
+      paddingBottom: 15,
+      width: '90%'
     },
-      valueInput: {
-        alignItems: 'center',
-        borderColor: '#FF6F00',
-        borderRadius: 5,
-        borderWidth: 1.5,
-        color: '#FFF',
-        marginTop: 5,
-        padding: 5,
-        paddingLeft: 12.5,
+      topSection: {
+        alignContent: 'center',
+        justifyContent: 'space-evenly',
+        marginTop: 15,
+        padding: 10
       },
-      textProperties: {
-        color: '#FFF',
-        fontSize: 15,
-        margin: 2.5,
-      },
-      containerSection: {
-        alignItems: 'flex-end',
-        alignSelf: 'center',
-        justifyContent: 'flex-end',
-        flex: 1,
+        productNameBox: {
+          alignItems: 'center',
+          flexDirection: 'row',
+          justifyContent: 'center',
+        },
+          productNameText: {
+            color: '#FF6F00',
+            marginRight: 10,
+            padding: 5
+          },
+          productNameInput: {
+            borderBottomWidth: 1,
+            borderColor: '#FF6F00',
+            color: '#FFF',
+            padding: 5,
+            paddingLeft: 10,
+            paddingRight: 10,
+          },
+      botSection: {
+        alignContent: 'center',
         flexDirection: 'row',
-        marginBottom: 10,
-        width: '95%'
+        justifyContent: 'space-between',
+        marginTop: 10,
+        padding: 10
       },
-        quantitySection: {
-          alignItems: 'center',
-          flex: 1,
-          flexDirection: 'row',
-          justifyContent: 'flex-end',
-        },
-        quantityText: {
-          color: '#FFF',
-          fontSize: 15,
-          marginRight: 10
-        },
-        quantityInput: {
-          borderColor: '#FF6F00',
-          borderRadius: 5,
-          borderWidth: 1.5,
-          color: '#FFF',
-          padding: 5,
-          paddingLeft: 15,
-          paddingRight: 15,
-          textAlign: 'center'
-        },
-        addButtonProperties: {
-          alignSelf: 'center',
-          backgroundColor: '#87277C',
-          borderWidth: 1,
-          borderRadius: 5,
-          flex: 1,
-          flexDirection: 'row',
-          justifyContent: 'space-around',
-          marginLeft: 50,
-          padding: 3,
-          width: 80
-        },
-        addbuttonTxtProperties: {
-          fontSize: 18,
-          color: '#ffffff',
-        },
         dropDownButtonStyle: {
-          alignItems: 'center',
+          alignContent: 'center',
           backgroundColor: 'transparent',
           borderColor: '#FF6F00',
-          borderRadius: 5,
-          borderWidth: 1,
-          marginTop: 10,
-          marginBottom: 10,
-          flex: 1,
-          width: 180
-        },
-        dropDownButtonTxtStyle: {
-          color: '#FFF',
-          fontStyle: 'italic'
-        },
-        dropDownLogoProperties: {
-          height: 40,
-          width: 40,
-          borderRadius: 50,
-        },
-        dropDownColumnStyle: {
           borderRadius: 10,
-          backgroundColor: '#87277C',
+          borderWidth: 1
         },
-        dropDownRowTxtStyle: {
-          color: '#FFF',
-        }
+          dropDownLogoProperties: {
+            height: 40,
+            width: 40,
+            borderRadius: 50,
+          },
+          dropDownButtonTxtStyle: {
+            color: '#FFF'
+          },
+          dropDownColumnStyle: {
+            borderRadius: 10,
+            backgroundColor: '#87277C',
+          },
+          dropDownRowTxtStyle: {
+            color: '#FFF',
+          },
+        quantityBox: {
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexDirection: 'row'
+        },
+          quantityText: {
+            color: '#FFFS',
+            marginRight: 10
+          },
+          quantityInput: {
+            borderRadius: 8,
+            borderColor: '#FF6F00',
+            borderWidth: 1,
+            color: '#FFF',
+            textAlign: 'center',
+            padding: 5,
+            paddingLeft: 10,
+            paddingRight: 10,
+          },
+        addButton: {
+          alignSelf: 'center',
+          backgroundColor: 'transparent',
+          borderColor: '#FF6F00',
+          borderWidth: 1,
+          borderRadius: 8,
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          marginTop: 15,
+          marginBottom: 15,
+          padding: 10,
+          width: 100
+        },
+        addButtonDisabled: {
+          alignSelf: 'center',
+          backgroundColor: '#6A6970',
+          borderRadius: 8,
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          marginTop: 15,
+          marginBottom: 15,
+          padding: 10,
+          width: 100
+        },
+          addButtonDisabledText: {
+            color: '#2C2C2C'
+          },
+          addButtonText: {
+            color: '#FFF'
+          }
+        
 });
 
 export default ShoppingList;
